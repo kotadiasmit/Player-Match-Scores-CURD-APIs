@@ -123,4 +123,73 @@ app.get("/matches/:matchId/", async (request, response) => {
   };
   response.send(camelCaseMatch);
 });
+
+//Returns a list of all the matches of a player//
+app.get("/players/:playerId/matches", async (request, response) => {
+  const { playerId } = request.params;
+  const playerMatchDetailQuery = `
+    SELECT * FROM player_match_score NATURAL JOIN match_details
+    WHERE player_id=${playerId}`;
+  const playerMatchDetail = await db.all(playerMatchDetailQuery);
+  console.log(playerMatchDetail);
+
+  const convertDbObjectToResponseObject = (dbObject) => {
+    return {
+      matchId: dbObject.match_id,
+      match: dbObject.match,
+      year: dbObject.year,
+    };
+  };
+
+  /*With the above function convertDbObjectToResponseObject, 
+  we got the responsive object into the camelCase.*/
+  let camelCaseArray = [];
+  let camelCaseOutput = playerMatchDetail.map((each) =>
+    camelCaseArray.push(convertDbObjectToResponseObject(each))
+  );
+  response.send(camelCaseArray);
+});
+
+//Returns a list of all the matches of a player//
+app.get("/matches/:matchId/players", async (request, response) => {
+  const { matchId } = request.params;
+  const matchPlayerDetailQuery = `
+    SELECT * FROM player_match_score NATURAL JOIN player_details
+    WHERE match_id=${matchId}`;
+  const matchPlayerDetail = await db.all(matchPlayerDetailQuery);
+  console.log(matchPlayerDetail);
+
+  const convertDbObjectToResponseObject = (dbObject) => {
+    return {
+      playerId: dbObject.player_id,
+      playerName: dbObject.player_name,
+    };
+  };
+
+  /*With the above function convertDbObjectToResponseObject, 
+  we got the responsive object into the camelCase.*/
+  let camelCaseArray = [];
+  let camelCaseOutput = matchPlayerDetail.map((each) =>
+    camelCaseArray.push(convertDbObjectToResponseObject(each))
+  );
+  response.send(camelCaseArray);
+});
+
+/*Return the statistics of the total score, total fours, 
+total sixes of a specific player based on the player ID*/
+app.get("/players/:playerId/playerScores", async (request, response) => {
+  const { playerId } = request.params;
+  const playerStatisticsQuery = `
+    SELECT 
+        player_id as playerId,
+        player_name as playerName,
+        SUM(score) as totalScore,
+        SUM(fours) as totalFours,
+        SUM(sixes) as totalSixes
+    FROM player_match_score NATURAL JOIN player_details
+    WHERE player_id=${playerId}`;
+  const playerStatistics = await db.get(playerStatisticsQuery);
+  console.log(playerStatistics);
+  response.send(playerStatistics);
+});
 module.exports = app;

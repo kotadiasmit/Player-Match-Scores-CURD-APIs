@@ -13,3 +13,8 @@ PUT http://localhost:3000/players/2
 
 GET http://localhost:3000/matches/18
 ###
+
+GET http://localhost:3000/players/1/matches
+###
+
+GET http://localhost:3000/matches/1/players
